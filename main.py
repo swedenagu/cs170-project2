@@ -1,5 +1,6 @@
 import pandas as pd
 import math
+import numpy as np
 
 data = pd.read_csv("CS170_Small_DataSet__62.txt")
 
@@ -27,3 +28,25 @@ for i in range(1, len(data)): # probably needs revision to properly parse file (
         number_correctly_classified += 1
 
 accuracy = number_correctly_classified / len(data)
+
+def main():
+    filename = input("Welcome to Sweden's Feature Selection Algorithm! Which set are you testing? ")
+
+    print("\nType the number of the algorithm you want to run.")
+    print("\n\t1) Forward Selection")
+    print("\n\t2) Backward Elimination\n")
+
+    algorithm = int(input())
+
+    
+    # Load data (all the columns after the class labels are different features)
+    data = np.loadtxt(filename)
+    y = data[:, 0]
+    x = data[:, 1:]
+
+    instances, features = X.shape
+    print(f"\nThis dataset has {features} features (not including the class attribute), with {instances} instances.\n")
+    
+
+if __name__ == "__main__":
+    main()
