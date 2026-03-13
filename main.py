@@ -1,39 +1,75 @@
+from numba import njit
 import pandas as pd
 import math
 import numpy as np
 
 data = pd.read_csv("CS170_Small_DataSet__62.txt")
 
-def leave_one_out_cross_validation(data, current_set, feature):
-    pass
+@njit
+def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
+    # Add the candidate to the current set if one is passed in
+    if feature_to_add is not None:
+        current_set += (current_set or []) + [feature_to_add]
 
+    # We slice the columns where the data selected is all the rows in the feature set (x) and the current set (y) is the class label column
+    x = data[:, current_set] if current_set else data[:, 1]
+    y = data[:, 0]
+
+    # Keep track of features we correctly identify
+    number_correctly_classified = 0
+
+    # Go through all the features and find the nearest neighbor distance for all of them
+    for i in range(len(x)):
+        object_to_classify = x[i]
+        label_object_to_classify = y[i]
+
+        # Track nearest neighbor -- initially nearest neighbor distance for each feature shouldn't be set
+        nearest_neighbor_distance = float('inf')
+        nearest_neighbor_label = None
+
+        for k in range(len(x)):
+            if k != i:
+                # Use Euclidean distance formula to calculate distance to neighbor
+                distance = math.sqrt(sum(object_to_classify - x[k] ** 2))
+                if distance < nearest_neighbor_distance:
+                    nearest_neighbor_distance = distance
+                    nearest_neighbor_label = y[k]
+
+        if label_object_to_classify == nearest_neighbor_label:
+            number_correctly_classified += 1
+
+    accuracy = number_correctly_classified / len(x)
+    return accuracy
+
+@njit
 def forward_selection(data, current_set, feature_to_add):
     pass
 
+@njit
 def backward_elimination(data, current_set, feature_to_add):
     pass
 
-accuracy = leave_one_out_cross_validation(data, current_set=None, feature_to_add=None) # cross-validation (not w/ K-folds), not implemented yet
+# accuracy = leave_one_out_cross_validation(data, current_set, feature_to_add=None) # cross-validation (not w/ K-folds), not implemented yet
 
-number_correctly_classified = 0
+# number_correctly_classified = 0
 
-for i in range(1, len(data)): # probably needs revision to properly parse file (adapted from MATLAB)
-    object_to_classify = data[2:] # should start from second column and go to end in row i -- how w/ pandas?
-    label_object_to_classify = data[i] # label in column 1 of row i in data
+# for i in range(1, len(data)): # probably needs revision to properly parse file (adapted from MATLAB)
+#     object_to_classify = data[2:] # should start from second column and go to end in row i -- how w/ pandas?
+#     label_object_to_classify = data[i] # label in column 1 of row i in data
 
-    nearest_neigbor_distance = None # or infinity
-    nearest_neighbor_location = None # or infinity
-    for k in range(len(data)):
-        if k != i:
-            distance = math.sqrt(sum(object_to_classify - data[2:])**2)
-            if distance < nearest_neigbor_distance:
-                nearest_neigbor_distance = distance
-                nearest_neighbor_location = k
-                nearest_neighbor_label = data[nearest_neighbor_location] # should be item in column 1 of row (nearest_neighbor_location)
-    if label_object_to_classify == nearest_neighbor_label:
-        number_correctly_classified += 1
+#     nearest_neigbor_distance = None # or infinity
+#     nearest_neighbor_location = None # or infinity
+#     for k in range(len(data)):
+#         if k != i:
+#             distance = math.sqrt(sum(object_to_classify - data[2:])**2)
+#             if distance < nearest_neigbor_distance:
+#                 nearest_neigbor_distance = distance
+#                 nearest_neighbor_location = k
+#                 nearest_neighbor_label = data[nearest_neighbor_location] # should be item in column 1 of row (nearest_neighbor_location)
+#     if label_object_to_classify == nearest_neighbor_label:
+#         number_correctly_classified += 1
 
-accuracy = number_correctly_classified / len(data)
+# accuracy = number_correctly_classified / len(data)
 
 def main():
     filename = input("Welcome to Sweden's Feature Selection Algorithm! Which set are you testing? ")
@@ -50,7 +86,7 @@ def main():
     y = data[:, 0]
     x = data[:, 1:]
 
-    instances, features = X.shape
+    instances, features = x.shape
     print(f"\nThis dataset has {features} features (not including the class attribute), with {instances} instances.\n")
 
     # First we include all features to have a default rate to measure our search algorithms against
@@ -62,6 +98,11 @@ def main():
     # Choose your algorithm
     if algorithm == 1:
         selected, best_acc_so_far = forward_selection(x, y, features)
+    elif algorithm == 2:
+        selected, best_acc_so_far = backward_elimination(x, y, features)
+
+    # Output the results of our search
+    print(f"\nFinished search! The best feature subset is {{{','.join(map(str, sorted(selected)))}}}, which has an accuracy of {best_acc_so_far*100:.1f}%")
 
 
 if __name__ == "__main__":
