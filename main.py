@@ -7,7 +7,13 @@ data = pd.read_csv("CS170_Small_DataSet__62.txt")
 def leave_one_out_cross_validation(data, current_set, feature):
     pass
 
-accuracy = leave_one_out_cross_validation(data, current_set, feature_to_add) # cross-validation (not w/ K-folds), not implemented yet
+def forward_selection(data, current_set, feature_to_add):
+    pass
+
+def backward_elimination(data, current_set, feature_to_add):
+    pass
+
+accuracy = leave_one_out_cross_validation(data, current_set=None, feature_to_add=None) # cross-validation (not w/ K-folds), not implemented yet
 
 number_correctly_classified = 0
 
@@ -46,7 +52,17 @@ def main():
 
     instances, features = X.shape
     print(f"\nThis dataset has {features} features (not including the class attribute), with {instances} instances.\n")
-    
+
+    # First we include all features to have a default rate to measure our search algorithms against
+    default_rate = leave_one_out_cross_validation(x, y)
+    print(f"\nRunning nearest neighbor with all {features}, using \"leave-one-out\" evaluation, I get an accuracy of {default_rate*100:.1f}%")
+
+    print("\nBeginning search.\n")
+
+    # Choose your algorithm
+    if algorithm == 1:
+        selected, best_acc_so_far = forward_selection(x, y, features)
+
 
 if __name__ == "__main__":
     main()
