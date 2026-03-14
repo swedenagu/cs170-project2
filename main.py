@@ -1,5 +1,4 @@
 from numba import njit, prange
-import pandas as pd
 import time
 import math
 import numpy as np
@@ -15,6 +14,7 @@ def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
 
     # We slice the columns where the data selected is all the rows in the feature set (x) and the current set (y) is the class label column
     x = data[:, indices]  # if len(current_set) else data[:, 1]
+    y = data[:, 0]
 
     # Keep track of features we correctly identify
     number_correctly_classified = 0
@@ -60,7 +60,6 @@ def forward_selection(data, current_set):
     # The accuracy and initial set of features we have should converge to the closest to "best" values by the end of the search
     best_accuracy = 0.0
     best_features = np.empty(0, dtype=np.int64)
-    y = data[:, 0]
 
     # Look at all the features and update the accuracy and best feature at each step of the search
     for step in range(current_set):
@@ -71,12 +70,8 @@ def forward_selection(data, current_set):
         # Now examine the rest of the features besides the current one
         for i in range(len(remaining)):
             feature = remaining[i]
-            candidate = np.append(selected, feature).astype(np.int64)
-
-            # Instead of slicing the rows for the candidate feature we're thinking of adding ([0:x] syntax) every time we look at a new candidate, we can only once per step
-            x_candidate = np.ascontiguousarray(data[:, candidate])
             accuracy = leave_one_out_cross_validation(
-                x_candidate, y
+                data, selected, feature_to_add=feature
             )
 
             # How accurate is each candidate (or set of candidates if we're not on the first one)?
