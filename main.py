@@ -210,7 +210,7 @@ def main():
 
     # Output the results of our search
     print(
-        f"\nFinished search! The best feature subset is {{{','.join(map(str, sorted(selected)))}}}, which has an accuracy of {best_acc_so_far*100}%"
+        f"\nFinished search! The best feature subset is {{{','.join(map(str, sorted(selected)))}}}, which has an accuracy of {best_acc_so_far*100:.2f}%"
     )
 
 
