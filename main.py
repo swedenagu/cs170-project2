@@ -141,15 +141,19 @@ def main():
     default_rate = leave_one_out_cross_validation(
         full_data, full_features
     )
-    print(f"\nRunning nearest neighbor with all {features}, using \"leave-one-out\" evaluation, I get an accuracy of {default_rate*100:.1f}%")
+    sanitycheck_one_acc = leave_one_out_cross_validation(
+        full_data, [7, 10, 12]
+    )
+    # print(f"\nRunning nearest neighbor with all {features}, using \"leave-one-out\" evaluation, I get an accuracy of {default_rate*100:.1f}%")
+    print(f"\nRunning nearest neighbor with features [7, 10, 12], using \"leave-one-out\" evaluation, I get an accuracy of {sanitycheck_one_acc*100:.1f}%")
 
     print("\nBeginning search.\n")
 
     # Choose your algorithm
     if algorithm == 1:
-        selected, best_acc_so_far = forward_selection(full_data, full_features)
+        selected, best_acc_so_far = forward_selection(full_data, features)
     elif algorithm == 2:
-        selected, best_acc_so_far = backward_elimination(full_data, full_features)
+        selected, best_acc_so_far = backward_elimination(full_data, features)
 
     # Use this to test nearest neighbor with sanity check
     elif algorithm == 3:
