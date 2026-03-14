@@ -131,7 +131,7 @@ def backward_elimination(data, current_set):
                 "Using feature(s)", best_features, " accuracy is ", accuracy * 100, "%"
             )
 
-            if accuracy > best_accuracy:
+            if accuracy > current_best_accuracy:
                 current_best_accuracy = accuracy
                 current_worst_feature = feature
 
