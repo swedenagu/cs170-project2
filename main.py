@@ -4,7 +4,7 @@ import math
 import numpy as np
 
 
-@njit
+@njit(parallel=True)
 def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
     # Add the candidate to the current set if one is passed in
     if feature_to_add is not None:
