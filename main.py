@@ -4,7 +4,7 @@ import math
 import numpy as np
 
 
-@njit(parallel=True)
+@njit
 def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
     # Add the candidate to the current set if one is passed in
     if feature_to_add is not None:
@@ -50,7 +50,7 @@ def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
     return accuracy
 
 
-@njit(parallel=True)
+@njit
 def forward_selection(data, current_set):
     selected = np.empty(0, dtype=np.int64)
 
@@ -107,7 +107,7 @@ def forward_selection(data, current_set):
     return best_features, best_accuracy
 
 
-@njit(parallel=True)
+@njit
 def backward_elimination(data, current_set):
     # We can ignore some features we picked in the forward search. Initally we look at all of them.
     selected = np.arange(1, current_set + 1, dtype=np.int64)
