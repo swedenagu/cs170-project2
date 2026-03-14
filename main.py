@@ -75,8 +75,7 @@ def forward_selection(data, current_set):
 
         # The best feature we found so far should be added to the set of selected features and removed from the ones remaining we need to check
         selected = np.append(selected, current_best_feature)
-        deletion_mask = remaining != current_best_feature
-        remaining = remaining[deletion_mask]
+        remaining = remaining[remaining != current_best_feature]
 
         # How do we know if the feature we just added makes the accuracy worse?
         if current_best_accuracy < best_accuracy:
@@ -93,29 +92,43 @@ def forward_selection(data, current_set):
 
 @njit
 def backward_elimination(data, current_set):
-    pass
+    # We can ignore some features we picked in the forward search. Initally we look at all of them.
+    selected = np.arange(1, current_set + 1, dtype=np.int64)
 
-# accuracy = leave_one_out_cross_validation(data, current_set, feature_to_add=None) # cross-validation (not w/ K-folds), not implemented yet
+    # The best accuracy we converge to should continuously update as we remove features rather than adding them like in forward search. The selected set also should be shallow copied to avoid accidentally changing it during each update.
+    best_accuracy = leave_one_out_cross_validation(data, selected)
+    best_features = selected.copy()
 
-# number_correctly_classified = 0
+    # The current number of features (current_set) should be an integer; we stop once there's a single feature left
+    for step in range(current_set - 1):
+        current_best_accuracy = 0.0
+        current_worst_feature = -1
 
-# for i in range(1, len(data)): # probably needs revision to properly parse file (adapted from MATLAB)
-#     object_to_classify = data[2:] # should start from second column and go to end in row i -- how w/ pandas?
-#     label_object_to_classify = data[i] # label in column 1 of row i in data
+        for i in range(len(selected)):
+            feature = selected[i]
+            # Use the same mask (like in line 78) to try removing the current feature
+            candidate = selected[selected != feature]
+            accuracy = leave_one_out_cross_validation(data, candidate)
 
-#     nearest_neigbor_distance = None # or infinity
-#     nearest_neighbor_location = None # or infinity
-#     for k in range(len(data)):
-#         if k != i:
-#             distance = math.sqrt(sum(object_to_classify - data[2:])**2)
-#             if distance < nearest_neigbor_distance:
-#                 nearest_neigbor_distance = distance
-#                 nearest_neighbor_location = k
-#                 nearest_neighbor_label = data[nearest_neighbor_location] # should be item in column 1 of row (nearest_neighbor_location)
-#     if label_object_to_classify == nearest_neighbor_label:
-#         number_correctly_classified += 1
+            print("Using feature(s)", best_features, " accuracy is ", accuracy * 100, "%")
 
-# accuracy = number_correctly_classified / len(data)
+            if accuracy > best_accuracy:
+                current_best_accuracy = accuracy
+                current_worst_feature = feature
+
+        # Now get rid of the "worst" feature
+        selected = selected[selected != current_worst_feature]
+
+        # Update the best accuracy if the accuracy is better after removing a feature
+        if current_best_accuracy < best_accuracy:
+            print("Warning: Accuracy has decreased! Continuing search in case of local maxima")
+        else:
+            best_accuracy = current_best_accuracy
+            best_features = selected.copy()
+
+        print("Feature set [",  selected, "] was best, accuracy is ", current_best_accuracy * 100, "%")
+    
+    return best_features, best_accuracy
 
 def main():
     filename = input("Welcome to Sweden's Feature Selection Algorithm! Which set are you testing? ")
