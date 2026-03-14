@@ -62,7 +62,7 @@ def forward_selection(data, current_set):
     best_features = np.empty(0, dtype=np.int64)
 
     # Look at all the features and update the accuracy and best feature at each step of the search
-    for step in prange(current_set):
+    for step in range(current_set):
         current_best_accuracy = 0.0
         # Initially we don't have a "best" feature if we haven't compared to another yet
         current_best_feature = -1
@@ -117,7 +117,7 @@ def backward_elimination(data, current_set):
     best_features = selected.copy()
 
     # The current number of features (current_set) should be an integer; we stop once there's a single feature left
-    for step in prange(current_set - 1):
+    for step in range(current_set - 1):
         current_best_accuracy = 0.0
         current_worst_feature = -1
 
