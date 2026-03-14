@@ -20,7 +20,9 @@ def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
     number_correctly_classified = 0
 
     # Go through all the features and find the nearest neighbor distance for all of them
-    for i in range(len(x)):
+    # We use prange (from numba library) to parallelize computation
+    # The goal is to speed up nearest neighbor by running different for loop iterations on different CPU threads
+    for i in prange(len(x)):
         object_to_classify = x[i]
         label_object_to_classify = y[i]
 
@@ -30,9 +32,7 @@ def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
             -1.0
         )  # numba can't handle variables not initialized as floats (no inference of None types)
 
-        # We use prange (from numba library) to parallelize computation
-        # The goal is to speed up nearest neighbor by running different for loop iterations on different CPU threads
-        for k in prange(len(x)):
+        for k in range(len(x)):
             if k != i:
                 # Use Euclidean distance formula to calculate distance to neighbor
                 diff = object_to_classify - x[k]
