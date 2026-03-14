@@ -3,9 +3,6 @@ import pandas as pd
 import math
 import numpy as np
 
-# data = pd.read_csv("CS170_Small_DataSet__62.txt")
-data = pd.read_csv("SanityCheck_DataSet__1.txt")
-
 @njit
 def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
     # Add the candidate to the current set if one is passed in
@@ -149,7 +146,10 @@ def main():
     print(f"\nThis dataset has {features} features (not including the class attribute), with {instances} instances.\n")
 
     # First we include all features to have a default rate to measure our search algorithms against
+
+    # We need this numpy function so that all the columns of features are combined into one column
     full_data = np.hstack([y.reshape(-1, 1), x])
+    # Gives us the range in the interval of all the features but as an ndarray instead of a normal Python range instance (another compilation trick)
     full_features = np.arange(1, x.shape[1] + 1, dtype=np.int64)
     default_rate = leave_one_out_cross_validation(
         full_data, full_features
@@ -166,7 +166,6 @@ def main():
 
     # Output the results of our search
     print(f"\nFinished search! The best feature subset is {{{','.join(map(str, sorted(selected)))}}}, which has an accuracy of {best_acc_so_far*100}%")
-
 
 if __name__ == "__main__":
     main()
