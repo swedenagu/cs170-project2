@@ -10,10 +10,10 @@ data = pd.read_csv("SanityCheck_DataSet__1.txt")
 def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
     # Add the candidate to the current set if one is passed in
     if feature_to_add is not None:
-        current_set += (current_set or []) + [feature_to_add]
+        current_set = np.append(current_set, feature_to_add).astype(np.int64)
 
     # We slice the columns where the data selected is all the rows in the feature set (x) and the current set (y) is the class label column
-    x = data[:, current_set] if current_set else data[:, 1]
+    x = data[:, current_set] if len(current_set) else data[:, 1:]
     y = data[:, 0]
 
     # Keep track of features we correctly identify
@@ -25,13 +25,13 @@ def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
         label_object_to_classify = y[i]
 
         # Track nearest neighbor -- initially nearest neighbor distance for each feature shouldn't be set
-        nearest_neighbor_distance = float('inf')
-        nearest_neighbor_label = None
+        nearest_neighbor_distance = np.inf
+        nearest_neighbor_label = -1.0 # numba can't handle variables not initialized as floats (no inference of None types)
 
         for k in range(len(x)):
             if k != i:
                 # Use Euclidean distance formula to calculate distance to neighbor
-                distance = math.sqrt(sum(object_to_classify - x[k] ** 2))
+                distance = math.sqrt(np.sum(object_to_classify - x[k]) ** 2)
                 if distance < nearest_neighbor_distance:
                     nearest_neighbor_distance = distance
                     nearest_neighbor_label = y[k]
@@ -102,7 +102,10 @@ def main():
     print(f"\nThis dataset has {features} features (not including the class attribute), with {instances} instances.\n")
 
     # First we include all features to have a default rate to measure our search algorithms against
-    default_rate = leave_one_out_cross_validation(x, y)
+    default_rate = leave_one_out_cross_validation(
+        np.hstack([y.reshape(-1, 1), x]),
+        np.arange(1, x.shape[1]+ 1, dtype=np.int64)
+    )
     print(f"\nRunning nearest neighbor with all {features}, using \"leave-one-out\" evaluation, I get an accuracy of {default_rate*100:.1f}%")
 
     print("\nBeginning search.\n")
