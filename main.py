@@ -4,6 +4,7 @@ import math
 import time
 import numpy as np
 
+
 @njit
 def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
     # Add the candidate to the current set if one is passed in
@@ -13,7 +14,7 @@ def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
         indices = current_set.astype(np.int64)
 
     # We slice the columns where the data selected is all the rows in the feature set (x) and the current set (y) is the class label column
-    x = data[:, indices] # if len(current_set) else data[:, 1]
+    x = data[:, indices]  # if len(current_set) else data[:, 1]
     y = data[:, 0]
 
     # Keep track of features we correctly identify
@@ -26,7 +27,9 @@ def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
 
         # Track nearest neighbor -- initially nearest neighbor distance for each feature shouldn't be set
         nearest_neighbor_distance = np.inf
-        nearest_neighbor_label = -1.0 # numba can't handle variables not initialized as floats (no inference of None types)
+        nearest_neighbor_label = (
+            -1.0
+        )  # numba can't handle variables not initialized as floats (no inference of None types)
 
         for k in range(len(x)):
             if k != i:
@@ -41,6 +44,7 @@ def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
 
     accuracy = number_correctly_classified / len(x)
     return accuracy
+
 
 @njit
 def forward_selection(data, current_set):
@@ -62,7 +66,9 @@ def forward_selection(data, current_set):
         # Now examine the rest of the features besides the current one
         for i in range(len(remaining)):
             feature = remaining[i]
-            accuracy = leave_one_out_cross_validation(data, selected, feature_to_add=feature)
+            accuracy = leave_one_out_cross_validation(
+                data, selected, feature_to_add=feature
+            )
 
             # How accurate is each candidate (or set of candidates if we're not on the first one)?
             print("Using feature(s) ", feature, ", accuracy is ", accuracy * 100, "%")
@@ -77,16 +83,25 @@ def forward_selection(data, current_set):
 
         # How do we know if the feature we just added makes the accuracy worse?
         if current_best_accuracy < best_accuracy:
-            print("Warning: Accuracy has decreased! Continuing search in case of local maxima")
+            print(
+                "Warning: Accuracy has decreased! Continuing search in case of local maxima"
+            )
         else:
             best_accuracy = current_best_accuracy
             # We want a shallow copy of the current best features we picked in order to avoid changing them later on accident
             best_features = selected.copy()
-        
+
         # print(f"Feature set {{{','.join(map(str, sorted(best_features)))}}} was best, accuracy is {current_best_accuracy * 100:.1f}")
-        print("Feature set [",  best_features, "] was best, accuracy is ", current_best_accuracy * 100, "%")
-    
+        print(
+            "Feature set [",
+            best_features,
+            "] was best, accuracy is ",
+            current_best_accuracy * 100,
+            "%",
+        )
+
     return best_features, best_accuracy
+
 
 @njit
 def backward_elimination(data, current_set):
@@ -108,7 +123,9 @@ def backward_elimination(data, current_set):
             candidate = selected[selected != feature]
             accuracy = leave_one_out_cross_validation(data, candidate)
 
-            print("Using feature(s)", best_features, " accuracy is ", accuracy * 100, "%")
+            print(
+                "Using feature(s)", best_features, " accuracy is ", accuracy * 100, "%"
+            )
 
             if accuracy > best_accuracy:
                 current_best_accuracy = accuracy
@@ -119,20 +136,28 @@ def backward_elimination(data, current_set):
 
         # Update the best accuracy if the accuracy is better after removing a feature
         if current_best_accuracy < best_accuracy:
-            print("Warning: Accuracy has decreased! Continuing search in case of local maxima")
+            print(
+                "Warning: Accuracy has decreased! Continuing search in case of local maxima"
+            )
         else:
             best_accuracy = current_best_accuracy
             best_features = selected.copy()
 
-        print("Feature set [",  selected, "] was best, accuracy is ", current_best_accuracy * 100, "%")
-    
+        print(
+            "Feature set [",
+            selected,
+            "] was best, accuracy is ",
+            current_best_accuracy * 100,
+            "%",
+        )
+
     return best_features, best_accuracy
 
-def main():
-    # Track how long each search takes to run
-    start_time = time.perf_counter() # high-res clock from Python time library that acts as a monotonic performance counter
 
-    filename = input("Welcome to Sweden's Feature Selection Algorithm! Which set are you testing? ")
+def main():
+    filename = input(
+        "Welcome to Sweden's Feature Selection Algorithm! Which set are you testing? "
+    )
 
     print("\nType the number of the algorithm you want to run.")
     print("\n\t1) Forward Selection")
@@ -140,14 +165,15 @@ def main():
 
     algorithm = int(input())
 
-    
     # Load data (all the columns after the class labels are different features)
     data = np.loadtxt(filename)
     y = data[:, 0]
     x = data[:, 1:]
 
     instances, features = x.shape
-    print(f"\nThis dataset has {features} features (not including the class attribute), with {instances} instances.\n")
+    print(
+        f"\nThis dataset has {features} features (not including the class attribute), with {instances} instances.\n"
+    )
 
     # First we include all features to have a default rate to measure our search algorithms against
 
@@ -155,12 +181,16 @@ def main():
     full_data = np.hstack([y.reshape(-1, 1), x])
     # Gives us the range in the interval of all the features but as an ndarray instead of a normal Python range instance (another compilation trick)
     full_features = np.arange(1, x.shape[1] + 1, dtype=np.int64)
-    default_rate = leave_one_out_cross_validation(
-        full_data, full_features
+    default_rate = leave_one_out_cross_validation(full_data, full_features)
+    print(
+        f'\nRunning nearest neighbor with all {features}, using "leave-one-out" evaluation, I get an accuracy of {default_rate*100:.1f}%'
     )
-    print(f"\nRunning nearest neighbor with all {features}, using \"leave-one-out\" evaluation, I get an accuracy of {default_rate*100:.1f}%")
 
     print("\nBeginning search.\n")
+    # Track how long each search takes to run
+    start_time = (
+        time.perf_counter()
+    )  # high-res clock from Python time library that acts as a monotonic performance counter
 
     # Choose your algorithm
     if algorithm == 1:
@@ -173,7 +203,10 @@ def main():
     print(f"Execution time was {elapsed_time:.4f} seconds")
 
     # Output the results of our search
-    print(f"\nFinished search! The best feature subset is {{{','.join(map(str, sorted(selected)))}}}, which has an accuracy of {best_acc_so_far*100}%")
+    print(
+        f"\nFinished search! The best feature subset is {{{','.join(map(str, sorted(selected)))}}}, which has an accuracy of {best_acc_so_far*100}%"
+    )
+
 
 if __name__ == "__main__":
     main()
