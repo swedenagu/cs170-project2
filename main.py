@@ -142,7 +142,7 @@ def main():
         full_data, full_features
     )
     sanitycheck_one_acc = leave_one_out_cross_validation(
-        full_data, [7, 10, 12]
+        full_data, np.array([7, 10, 12], dtype=np.int64)
     )
     # print(f"\nRunning nearest neighbor with all {features}, using \"leave-one-out\" evaluation, I get an accuracy of {default_rate*100:.1f}%")
     print(f"\nRunning nearest neighbor with features [7, 10, 12], using \"leave-one-out\" evaluation, I get an accuracy of {sanitycheck_one_acc*100:.1f}%")
