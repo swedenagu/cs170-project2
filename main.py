@@ -50,7 +50,7 @@ def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
     return accuracy
 
 
-@njit
+@njit(parallel=True)
 def forward_selection(data, current_set):
     selected = np.empty(0, dtype=np.int64)
 
@@ -62,7 +62,7 @@ def forward_selection(data, current_set):
     best_features = np.empty(0, dtype=np.int64)
 
     # Look at all the features and update the accuracy and best feature at each step of the search
-    for step in range(current_set):
+    for step in prange(current_set):
         current_best_accuracy = 0.0
         # Initially we don't have a "best" feature if we haven't compared to another yet
         current_best_feature = -1
@@ -92,7 +92,7 @@ def forward_selection(data, current_set):
             )
         else:
             best_accuracy = current_best_accuracy
-            # We want a shallow copy of the current best features we picked in order to avoid changing them later on accident
+            # We want a deep copy of the current best features we picked in order to avoid changing them later on accident
             best_features = selected.copy()
 
         # print(f"Feature set {{{','.join(map(str, sorted(best_features)))}}} was best, accuracy is {current_best_accuracy * 100:.1f}")
@@ -107,17 +107,17 @@ def forward_selection(data, current_set):
     return best_features, best_accuracy
 
 
-@njit
+@njit(parallel=True)
 def backward_elimination(data, current_set):
     # We can ignore some features we picked in the forward search. Initally we look at all of them.
     selected = np.arange(1, current_set + 1, dtype=np.int64)
 
-    # The best accuracy we converge to should continuously update as we remove features rather than adding them like in forward search. The selected set also should be shallow copied to avoid accidentally changing it during each update.
+    # The best accuracy we converge to should continuously update as we remove features rather than adding them like in forward search. The selected set also should be deep copied to avoid accidentally changing it during each update.
     best_accuracy = leave_one_out_cross_validation(data, selected)
     best_features = selected.copy()
 
     # The current number of features (current_set) should be an integer; we stop once there's a single feature left
-    for step in range(current_set - 1):
+    for step in prange(current_set - 1):
         current_best_accuracy = 0.0
         current_worst_feature = -1
 
