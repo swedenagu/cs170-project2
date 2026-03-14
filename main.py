@@ -13,7 +13,7 @@ def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
         current_set = np.append(current_set, feature_to_add).astype(np.int64)
 
     # We slice the columns where the data selected is all the rows in the feature set (x) and the current set (y) is the class label column
-    x = data[:, current_set] if len(current_set) else data[:, 1:]
+    x = data[:, current_set] if len(current_set) else data[:, 1]
     y = data[:, 0]
 
     # Keep track of features we correctly identify
