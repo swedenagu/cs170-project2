@@ -3,7 +3,8 @@ import pandas as pd
 import math
 import numpy as np
 
-data = pd.read_csv("CS170_Small_DataSet__62.txt")
+# data = pd.read_csv("CS170_Small_DataSet__62.txt")
+data = pd.read_csv("SanityCheck_DataSet__1.txt")
 
 @njit
 def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
@@ -43,7 +44,18 @@ def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
 
 @njit
 def forward_selection(data, current_set, feature_to_add):
-    pass
+    selected = []
+
+    # 1-indexed
+    remaining = list(range(1, feature_to_add + 1))
+
+    # The accuracy and initial set of features we have should converge to the closest to "best" values by the end of the search
+    accuracy = 0
+    best_features = []
+
+    for step in range(feature_to_add):
+        # current_accuracy = 
+        pass
 
 @njit
 def backward_elimination(data, current_set, feature_to_add):
@@ -100,6 +112,10 @@ def main():
         selected, best_acc_so_far = forward_selection(x, y, features)
     elif algorithm == 2:
         selected, best_acc_so_far = backward_elimination(x, y, features)
+
+    # Use this to test nearest neighbor with sanity check
+    elif algorithm == 3:
+        selected, best_acc_so_far = leave_one_out_cross_validation(x, y, features)
 
     # Output the results of our search
     print(f"\nFinished search! The best feature subset is {{{','.join(map(str, sorted(selected)))}}}, which has an accuracy of {best_acc_so_far*100:.1f}%")
