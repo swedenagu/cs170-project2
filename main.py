@@ -67,7 +67,7 @@ def forward_selection(data, current_set):
             accuracy = leave_one_out_cross_validation(data, selected, feature_to_add=feature)
 
             # How accurate is each candidate (or set of candidates if we're not on the first one)?
-            print(f"Using feature(s) {feature}, accuracy is {accuracy * 100}:.1f%")
+            print("Using feature(s) ", feature, ", accuracy is ", accuracy * 100, "%")
 
             if accuracy > current_best_accuracy:
                 current_best_accuracy = accuracy
@@ -86,7 +86,8 @@ def forward_selection(data, current_set):
             # We want a shallow copy of the current best features we picked in order to avoid changing them later on accident
             best_features = selected.copy()
         
-        print(f"Feature set {{{','.join(map(str, sorted(best_features)))}}} was best, accuracy is {current_best_accuracy * 100:.1f}")
+        # print(f"Feature set {{{','.join(map(str, sorted(best_features)))}}} was best, accuracy is {current_best_accuracy * 100:.1f}")
+        print("Feature set [",  best_features, "] was best, accuracy is ", current_best_accuracy * 100, "%")
     
     return best_features, best_accuracy
 
