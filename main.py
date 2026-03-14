@@ -10,10 +10,12 @@ data = pd.read_csv("SanityCheck_DataSet__1.txt")
 def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
     # Add the candidate to the current set if one is passed in
     if feature_to_add is not None:
-        current_set = np.append(current_set, feature_to_add).astype(np.int64)
+        indices = np.append(current_set, feature_to_add).astype(np.int64)
+    else:
+        indices = current_set.astype(np.int64)
 
     # We slice the columns where the data selected is all the rows in the feature set (x) and the current set (y) is the class label column
-    x = data[:, current_set] # if len(current_set) else data[:, 1]
+    x = data[:, indices] # if len(current_set) else data[:, 1]
     y = data[:, 0]
 
     # Keep track of features we correctly identify
@@ -102,9 +104,10 @@ def main():
     print(f"\nThis dataset has {features} features (not including the class attribute), with {instances} instances.\n")
 
     # First we include all features to have a default rate to measure our search algorithms against
+    full_data = np.hstack([y.reshape(-1, 1), x])
+    full_features = np.arange(1, x.shape[1] + 1, dtype=np.int64)
     default_rate = leave_one_out_cross_validation(
-        np.hstack([y.reshape(-1, 1), x]),
-        np.arange(1, x.shape[1]+ 1, dtype=np.int64)
+        full_data, full_features
     )
     print(f"\nRunning nearest neighbor with all {features}, using \"leave-one-out\" evaluation, I get an accuracy of {default_rate*100:.1f}%")
 
@@ -118,7 +121,9 @@ def main():
 
     # Use this to test nearest neighbor with sanity check
     elif algorithm == 3:
-        selected, best_acc_so_far = leave_one_out_cross_validation(x, y, features)
+        subset = np.array([7, 10, 12], dtype=np.int64)
+        best_acc_so_far = leave_one_out_cross_validation(x, y, features)
+        selected = subset
 
     # Output the results of our search
     print(f"\nFinished search! The best feature subset is {{{','.join(map(str, sorted(selected)))}}}, which has an accuracy of {best_acc_so_far*100:.1f}%")
