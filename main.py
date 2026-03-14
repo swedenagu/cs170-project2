@@ -1,6 +1,7 @@
 from numba import njit
 import pandas as pd
 import math
+import time
 import numpy as np
 
 @njit
@@ -128,6 +129,9 @@ def backward_elimination(data, current_set):
     return best_features, best_accuracy
 
 def main():
+    # Track how long each search takes to run
+    start_time = time.perf_counter() # high-res clock from Python time library that acts as a monotonic performance counter
+
     filename = input("Welcome to Sweden's Feature Selection Algorithm! Which set are you testing? ")
 
     print("\nType the number of the algorithm you want to run.")
@@ -163,6 +167,10 @@ def main():
         selected, best_acc_so_far = forward_selection(full_data, features)
     elif algorithm == 2:
         selected, best_acc_so_far = backward_elimination(full_data, features)
+
+    end_time = time.perf_counter()
+    elapsed_time = end_time - start_time
+    print(f"Execution time was {elapsed_time:.4f} seconds")
 
     # Output the results of our search
     print(f"\nFinished search! The best feature subset is {{{','.join(map(str, sorted(selected)))}}}, which has an accuracy of {best_acc_so_far*100}%")
