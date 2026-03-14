@@ -91,7 +91,7 @@ def forward_selection(data, current_set):
     return best_features, best_accuracy
 
 @njit
-def backward_elimination(data, current_set, feature_to_add):
+def backward_elimination(data, current_set):
     pass
 
 # accuracy = leave_one_out_cross_validation(data, current_set, feature_to_add=None) # cross-validation (not w/ K-folds), not implemented yet
@@ -146,9 +146,9 @@ def main():
 
     # Choose your algorithm
     if algorithm == 1:
-        selected, best_acc_so_far = forward_selection(x, y, features)
+        selected, best_acc_so_far = forward_selection(full_data, full_features)
     elif algorithm == 2:
-        selected, best_acc_so_far = backward_elimination(x, y, features)
+        selected, best_acc_so_far = backward_elimination(full_data, full_features)
 
     # Use this to test nearest neighbor with sanity check
     elif algorithm == 3:
