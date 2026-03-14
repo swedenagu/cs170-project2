@@ -164,12 +164,6 @@ def main():
     elif algorithm == 2:
         selected, best_acc_so_far = backward_elimination(full_data, features)
 
-    # Use this to test nearest neighbor with sanity check
-    elif algorithm == 3:
-        subset = np.array([7, 10, 12], dtype=np.int64)
-        best_acc_so_far = leave_one_out_cross_validation(x, y, features)
-        selected = subset
-
     # Output the results of our search
     print(f"\nFinished search! The best feature subset is {{{','.join(map(str, sorted(selected)))}}}, which has an accuracy of {best_acc_so_far*100}%")
 
