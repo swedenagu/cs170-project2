@@ -3,7 +3,6 @@ import time
 import math
 import numpy as np
 
-
 @njit(parallel=True)
 def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
     # Add the candidate to the current set if one is passed in
@@ -12,7 +11,8 @@ def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
     else:
         indices = current_set.astype(np.int64)
 
-    # We slice the columns where the data selected is all the rows in the feature set (x) and the current set (y) is the class label column
+    # We slice the columns where the data selected is all the rows
+    #   in the feature set (x) and the current set (y) is the class label column
     x = data[:, indices]  # if len(current_set) else data[:, 1]
     y = data[:, 0]
 
@@ -36,7 +36,8 @@ def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
             if k != i:
                 # Use Euclidean distance formula to calculate distance to neighbor
                 diff = object_to_classify - x[k]
-                # We still square the distance between the current feature and object we're trying to classify but with a diff variable instead of computing it in-place
+                # We still square the distance between the current feature and 
+                #   object we're trying to classify but with a diff variable instead of computing it in-place
                 # Computing the matrix dot product is faster than doing a sum across all elements
                 distance = math.sqrt(np.dot(diff, diff))
                 if distance < nearest_neighbor_distance:
@@ -49,12 +50,13 @@ def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
     accuracy = number_correctly_classified / len(x)
     return accuracy
 
-
 @njit
 def forward_selection(data, current_set):
     selected = np.empty(0, dtype=np.int64)
 
     # 1-indexed
+    # Each call to np.arange is similar to range from typical Python. It returns a numpy ndarray.
+    # We also cast the type of each element in the np array to a 64-bit integer.
     remaining = np.arange(1, current_set + 1, dtype=np.int64)
 
     # The accuracy and initial set of features we have should converge to the closest to "best" values by the end of the search
@@ -81,7 +83,8 @@ def forward_selection(data, current_set):
                 current_best_accuracy = accuracy
                 current_best_feature = feature
 
-        # The best feature we found so far should be added to the set of selected features and removed from the ones remaining we need to check
+        # The best feature we found so far should be added to the set of 
+        #   selected features and removed from the ones remaining we need to check
         selected = np.append(selected, current_best_feature)
         remaining = remaining[remaining != current_best_feature]
 
@@ -95,24 +98,18 @@ def forward_selection(data, current_set):
             # We want a deep copy of the current best features we picked in order to avoid changing them later on accident
             best_features = selected.copy()
 
-        # print(f"Feature set {{{','.join(map(str, sorted(best_features)))}}} was best, accuracy is {current_best_accuracy * 100:.1f}")
-        print(
-            "Feature set [",
-            best_features,
-            "] was best, accuracy is ",
-            current_best_accuracy * 100,
-            "%",
-        )
+        print("Feature set [", best_features, "] was best, accuracy is ", current_best_accuracy * 100, "%")
 
     return best_features, best_accuracy
-
 
 @njit
 def backward_elimination(data, current_set):
     # We can ignore some features we picked in the forward search. Initally we look at all of them.
     selected = np.arange(1, current_set + 1, dtype=np.int64)
 
-    # The best accuracy we converge to should continuously update as we remove features rather than adding them like in forward search. The selected set also should be deep copied to avoid accidentally changing it during each update.
+    # The best accuracy we converge to should continuously update as we 
+    #   remove features rather than adding them like in forward search. The selected 
+    #   set also should be deep copied to avoid accidentally changing it during each update.
     best_accuracy = leave_one_out_cross_validation(data, selected)
     best_features = selected.copy()
 
@@ -147,16 +144,9 @@ def backward_elimination(data, current_set):
             best_accuracy = current_best_accuracy
             best_features = selected.copy()
 
-        print(
-            "Feature set [",
-            selected,
-            "] was best, accuracy is ",
-            current_best_accuracy * 100,
-            "%",
-        )
+        print("Feature set [", selected, "] was best, accuracy is ", current_best_accuracy * 100, "%")
 
     return best_features, best_accuracy
-
 
 def main():
     filename = input(
@@ -183,20 +173,20 @@ def main():
 
     # We need this numpy function so that all the columns of features are combined into one column
     # When we do operations later on (e.g. slicing up the feature sets), we can end up forming non-contiguous arrays
-    # We want to maximize the speed of numpy operations by allowing for vectorization and keeping them C-contiguous where all data is stored row-by-row
+    # We want to maximize the speed of numpy operations by allowing for 
+    #   vectorization and keeping them C-contiguous where all data is stored row-by-row
     full_data = np.ascontiguousarray(np.hstack([y.reshape(-1, 1), x]))
-    # Gives us the range in the interval of all the features but as an ndarray instead of a normal Python range instance (another compilation trick)
     full_features = np.arange(1, x.shape[1] + 1, dtype=np.int64)
     default_rate = leave_one_out_cross_validation(full_data, full_features)
     print(
-        f'\nRunning nearest neighbor with all {features}, using "leave-one-out" evaluation, I get an accuracy of {default_rate*100:.1f}%'
+        f'\nRunning nearest neighbor with all {features}, using "leave-one-out" evaluation," I get an accuracy of {default_rate*100:.1f}%'
     )
 
     print("\nBeginning search.\n")
     # Track how long each search takes to run
-    start_time = (
-        time.perf_counter()
-    )  # high-res clock from Python time library that acts as a monotonic performance counter
+
+    # high-res clock from Python time library that acts as a monotonic performance counter
+    start_time = (time.perf_counter())
 
     # Choose your algorithm
     if algorithm == 1:
@@ -212,7 +202,6 @@ def main():
     print(
         f"\nFinished search! The best feature subset is {{{','.join(map(str, sorted(selected)))}}}, which has an accuracy of {best_acc_so_far*100:.2f}%"
     )
-
 
 if __name__ == "__main__":
     main()
