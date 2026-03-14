@@ -45,19 +45,50 @@ def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
     return accuracy
 
 @njit
-def forward_selection(data, current_set, feature_to_add):
-    selected = []
+def forward_selection(data, current_set):
+    selected = np.empty(0, dtype=np.int64)
 
     # 1-indexed
-    remaining = list(range(1, feature_to_add + 1))
+    remaining = np.arange(1, current_set + 1, dtype=np.int64)
 
     # The accuracy and initial set of features we have should converge to the closest to "best" values by the end of the search
-    accuracy = 0
-    best_features = []
+    best_accuracy = 0.0
+    best_features = np.empty(0, dtype=np.int64)
 
-    for step in range(feature_to_add):
-        # current_accuracy = 
-        pass
+    # Look at all the features and update the accuracy and best feature at each step of the search
+    for step in range(current_set):
+        current_best_accuracy = 0.0
+        # Initially we don't have a "best" feature if we haven't compared to another yet
+        current_best_feature = -1
+
+        # Now examine the rest of the features besides the current one
+        for i in range(len(remaining)):
+            feature = remaining[i]
+            accuracy = leave_one_out_cross_validation(data, selected, feature_to_add=feature)
+
+            # How accurate is each candidate (or set of candidates if we're not on the first one)?
+            print(f"Using feature(s) {feature}, accuracy is {accuracy * 100}:.1f%")
+
+            if accuracy > current_best_accuracy:
+                current_best_accuracy = accuracy
+                current_best_feature = feature
+
+        # The best feature we found so far should be added to the set of selected features and removed from the ones remaining we need to check
+        selected = np.append(selected, current_best_feature)
+        deletion_mask = remaining != current_best_feature
+        remaining = remaining[deletion_mask]
+
+        # How do we know if the feature we just added makes the accuracy worse?
+        if current_best_accuracy < best_accuracy:
+            print("Warning: Accuracy has decreased! Continuing search in case of local maxima")
+        else:
+            best_accuracy = current_best_accuracy
+            # We want a shallow copy of the current best features we picked in order to avoid changing them later on accident
+            best_features = selected.copy()
+        
+        print(f"Feature set {{{','.join(map(str, sorted(best_features)))}}} was best, accuracy is {current_best_accuracy * 100:.1f}")
+    
+    return best_features, best_accuracy
 
 @njit
 def backward_elimination(data, current_set, feature_to_add):
@@ -126,7 +157,7 @@ def main():
         selected = subset
 
     # Output the results of our search
-    print(f"\nFinished search! The best feature subset is {{{','.join(map(str, sorted(selected)))}}}, which has an accuracy of {best_acc_so_far*100:.1f}%")
+    print(f"\nFinished search! The best feature subset is {{{','.join(map(str, sorted(selected)))}}}, which has an accuracy of {best_acc_so_far*100}%")
 
 
 if __name__ == "__main__":
