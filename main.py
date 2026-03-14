@@ -1,11 +1,11 @@
-from numba import njit
+from numba import njit, prange
 import pandas as pd
 import math
 import time
 import numpy as np
 
 
-@njit
+@njit(parallel=True)
 def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
     # Add the candidate to the current set if one is passed in
     if feature_to_add is not None:
@@ -15,7 +15,6 @@ def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
 
     # We slice the columns where the data selected is all the rows in the feature set (x) and the current set (y) is the class label column
     x = data[:, indices]  # if len(current_set) else data[:, 1]
-    y = data[:, 0]
 
     # Keep track of features we correctly identify
     number_correctly_classified = 0
@@ -31,10 +30,15 @@ def leave_one_out_cross_validation(data, current_set, feature_to_add=None):
             -1.0
         )  # numba can't handle variables not initialized as floats (no inference of None types)
 
-        for k in range(len(x)):
+        # We use prange (from numba library) to parallelize computation
+        # The goal is to speed up nearest neighbor by running different for loop iterations on different CPU threads
+        for k in prange(len(x)):
             if k != i:
                 # Use Euclidean distance formula to calculate distance to neighbor
-                distance = math.sqrt(np.sum((object_to_classify - x[k]) ** 2))
+                diff = object_to_classify - x[k]
+                # We still square the distance between the current feature and object we're trying to classify but with a diff variable instead of computing it in-place
+                # Computing the matrix dot product is faster than doing a sum across all elements
+                distance = math.sqrt(np.dot(diff, diff))
                 if distance < nearest_neighbor_distance:
                     nearest_neighbor_distance = distance
                     nearest_neighbor_label = y[k]
@@ -56,6 +60,7 @@ def forward_selection(data, current_set):
     # The accuracy and initial set of features we have should converge to the closest to "best" values by the end of the search
     best_accuracy = 0.0
     best_features = np.empty(0, dtype=np.int64)
+    y = data[:, 0]
 
     # Look at all the features and update the accuracy and best feature at each step of the search
     for step in range(current_set):
@@ -66,8 +71,12 @@ def forward_selection(data, current_set):
         # Now examine the rest of the features besides the current one
         for i in range(len(remaining)):
             feature = remaining[i]
+            candidate = np.append(selected, feature).astype(np.int64)
+
+            # Instead of slicing the rows for the candidate feature we're thinking of adding ([0:x] syntax) every time we look at a new candidate, we can only once per step
+            x_candidate = np.ascontiguousarray(data[:, candidate])
             accuracy = leave_one_out_cross_validation(
-                data, selected, feature_to_add=feature
+                x_candidate, y
             )
 
             # How accurate is each candidate (or set of candidates if we're not on the first one)?
@@ -178,7 +187,9 @@ def main():
     # First we include all features to have a default rate to measure our search algorithms against
 
     # We need this numpy function so that all the columns of features are combined into one column
-    full_data = np.hstack([y.reshape(-1, 1), x])
+    # When we do operations later on (e.g. slicing up the feature sets), we can end up forming non-contiguous arrays
+    # We want to maximize the speed of numpy operations by allowing for vectorization and keeping them C-contiguous where all data is stored row-by-row
+    full_data = np.ascontiguousarray(np.hstack([y.reshape(-1, 1), x]))
     # Gives us the range in the interval of all the features but as an ndarray instead of a normal Python range instance (another compilation trick)
     full_features = np.arange(1, x.shape[1] + 1, dtype=np.int64)
     default_rate = leave_one_out_cross_validation(full_data, full_features)
