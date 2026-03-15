@@ -77,7 +77,7 @@ def forward_selection(data, current_set):
             )
 
             # How accurate is each candidate (or set of candidates if we're not on the first one)?
-            print("Using feature(s) ", feature, ", accuracy is ", round(accuracy * 100), 2, "%")
+            print("Using feature(s) ", feature, ", accuracy is ", round(accuracy * 100, 2), "%")
 
             if accuracy > current_best_accuracy:
                 current_best_accuracy = accuracy
