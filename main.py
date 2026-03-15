@@ -77,7 +77,7 @@ def forward_selection(data, current_set):
             )
 
             # How accurate is each candidate (or set of candidates if we're not on the first one)?
-            print("Using feature(s) ", feature, ", accuracy is ", round(accuracy * 100, 3), "%")
+            print("Using feature(s) ", feature, ", accuracy is ", round(accuracy * 100, 2), "%")
 
             if accuracy > current_best_accuracy:
                 current_best_accuracy = accuracy
@@ -98,7 +98,7 @@ def forward_selection(data, current_set):
             # We want a deep copy of the current best features we picked in order to avoid changing them later on accident
             best_features = selected.copy()
 
-        print("Feature set [", best_features, "] was best, accuracy is ", round(current_best_accuracy * 100, 3), "%")
+        print("Feature set [", best_features, "] was best, accuracy is ", round(current_best_accuracy * 100, 2), "%")
 
     return best_features, best_accuracy
 
@@ -125,7 +125,7 @@ def backward_elimination(data, current_set):
             accuracy = leave_one_out_cross_validation(data, candidate)
 
             print(
-                "Using feature(s)", best_features, " accuracy is ", round(accuracy * 100, 3), "%"
+                "Using feature(s)", best_features, " accuracy is ", round(accuracy * 100, 2), "%"
             )
 
             if accuracy > current_best_accuracy:
@@ -144,7 +144,7 @@ def backward_elimination(data, current_set):
             best_accuracy = current_best_accuracy
             best_features = selected.copy()
 
-        print("Feature set [", selected, "] was best, accuracy is ", round(current_best_accuracy * 100, 3), "%")
+        print("Feature set [", selected, "] was best, accuracy is ", round(current_best_accuracy * 100, 2), "%")
 
     return best_features, best_accuracy
 
