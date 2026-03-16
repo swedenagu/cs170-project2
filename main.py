@@ -125,7 +125,7 @@ def backward_elimination(data, current_set):
             accuracy = leave_one_out_cross_validation(data, candidate)
 
             print(
-                "Using feature(s)", candidate, " accuracy is ", round(accuracy * 100, 2), "%"
+                "Using feature(s)", feature, " accuracy is ", round(accuracy * 100, 2), "%"
             )
 
             if accuracy > current_best_accuracy:
