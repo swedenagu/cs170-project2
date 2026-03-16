@@ -114,7 +114,7 @@ def backward_elimination(data, current_set):
     best_features = selected.copy()
 
     # The current number of features (current_set) should be an integer; we stop once there's a single feature left
-    for step in range(current_set):
+    for step in range(current_set - 1):
         current_best_accuracy = 0.0
         current_worst_feature = -1
 
